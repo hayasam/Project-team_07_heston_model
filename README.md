@@ -1,2 +1,5 @@
-# Project_Base
-Base Repo for course projects
+# Course project or Applied Stochastic Processes
+
+## Project topic: 
+
+## Team members:
