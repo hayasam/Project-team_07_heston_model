@@ -185,3 +185,25 @@ def PlotHestonSurface(lmbda=6.21, vbar=0.019, eta=0.61, rho=-0.7, v0=0.010201, i
                   IVHeston = Vectorize(function(k, t)(ImpliedVolCall(S0, k, t, r, HestonPrice(k, t)))
         
         z = outer(Ks, taus, IVHeston)
+                                                                     
+        nrz = nrow(z)
+        ncz = ncol(z)
+        nb.col = 256
+        color = heat.colors(nb.col)
+        facet =  -(z[-1, -1] + z[-1, -ncz] + z[-nrz, -1] + z[-nrz, -ncz])
+        facetcol = cut(facet, nb.col)
+        
+        x=Ks
+        y=taus
+        z
+        theta = 40
+        phi = 20
+        expand = 0.5
+        col=color[facetcol],
+        xlab="Strikes"
+        ylab="Time to maturity"
+        zlab="Implied Volatility"
+        ticktype="detailed"
+        plt.plot(x,y,z)                            
+        return(invisible(z))
+    
