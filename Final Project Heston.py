@@ -173,3 +173,15 @@ def HestonSurface(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, N=5, min_tau
                         n = n+1
     
 
+    
+#the following code is for plotting the Heston Surface
+
+def PlotHestonSurface(lmbda=6.21, vbar=0.019, eta=0.61, rho=-0.7, v0=0.010201, intr=0.0319, tau=1.0, S0=100, strike=100, N=30, min_tau = 1/ONEYEAR):
+                  Ks = seq(0.8*strike, 1.25 * strike, length=N)  
+                  taus = seq(0.21, tau, length=N)
+        
+                  HestonPrice = Vectorize(function(k, t)(HestonCallClosedForm(lmbda, vbar, eta, rho, v0, r, t, S0, k))
+        
+                  IVHeston = Vectorize(function(k, t)(ImpliedVolCall(S0, k, t, r, HestonPrice(k, t)))
+        
+        z = outer(Ks, taus, IVHeston)
