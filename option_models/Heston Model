@@ -1,0 +1,14 @@
+def HestonCallClosedForm (lmbda, vbar, eta, rho, v0, intr, tau, S0, strike):
+    PIntegrand = function(u, lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, j) 
+    F = S0*exp(intr/tau)
+    x = log(F/strike)
+    a = lmbda * vbar
+            
+    if(j == 1):
+        b = lmbda - rho* eta
+        alpha =  (u^2)/2 - (u/2 * one_i) + (one_i * u)      #Changed 1i to one_i
+        beta = lmbda - (rho * eta) - (rho * eta * one_i * u)
+    else:
+        b = lmbda
+        alpha = (u^2)/2 - (u/2 * one_i)
+        beta = lmbda - (rho * eta * one_i * u)
