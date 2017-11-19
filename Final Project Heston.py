@@ -86,4 +86,90 @@ def P(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, j):
     B = strike*exp(-r*tau)*P(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, 0)
     A-B
 
+    def HestonMonteCarlo(lmbda, vbar, eta, rho, v0, intr, thau, S0, strike, nSteps=2000, nPaths=3000, vneg=2):
+
+        n = nSteps
+        N = nPaths
+        
+        dt = tau / n
+        
+        negCount = 0
+        
+        S = rep(S0,N)
+        v = rep(v0,N)
+        
+        for i in range(1, n):
+           
+                W1 = rnorm(N);
+                W2 = rnorm(N);
+                W2 = rho*W1 + sqrt(1 - rho^2)*W2;
+
+                sqvdt = sqrt(v*dt)
+                S = S*exp((intr-v/2)*dt + sqrt(v * dt) * W1)
+                
+                if ((vneg == 3) & (2*lmbda*vbar/(eta^2) <= 1)):
+                    cat("Variance not guaranteed to be positive with choice of lambda, vbar, and eta\n")
+                    cat("Defaulting to Reflection + Milstein method\n")
+                    vneg = 2
+                
+
+                if (vneg == 0):
+                    ## Absorbing condition
+                    v = v + lmbda*(vbar - v)* dt + eta * sqvdt * W2
+                    negCount = negCount + length(v[v < 0])
+                    v[v < 0] = 0
+                
+                if (vneg == 1):
+                    ## Reflecting condition
+                    sqvdt = sqrt(v*dt)
+                    v = v + lmbda*(vbar - v)* dt + eta * sqvdt * W2
+                    negCount = negCount + length(v[v < 0])
+                    v = ifelse(v<0, -v, v)
+                
+                if (vneg == 2):
+                    ## Reflecting condition + Milstein
+                    v = (sqrt(v) + eta/2*sqrt(dt)*W2)^2 - lmbda*(v-vbar)*dt - eta^2/4*dt
+                    negCount = negCount + length(v[v < 0])
+                    v = ifelse(v<0, -v, v)     
+                
+                if (vneg == 3):
+                    ## Alfonsi - See Gatheral p.23
+                    v = v -lmbda*(v-vbar)*dt +eta*sqrt(v*dt)*W2 - eta^2/2*dt      
+                
+            
+        
+        negCount = negCount / (n*N);
+
+        ## Evaluate mean call value for each path
+        V = exp(-intr*tau)*(S>K)*(S - strike); # Boundary condition for European call
+        AV = mean(V);
+        AVdev = 2 * sd(V) / sqrt(N);
+
+        list(value=AV, lower = AV-AVdev, upper = AV+AVdev, zerohits = negCount)
+    
+
+
+def HestonSurface(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, N=5, min_tau = 1/ONEYEAR):
+    LogStrikes = seq(-0.5, 0.5, length=N)
+    Ks = rep(0.0,N)
+    taus = seq(min.tau, tau, length=N)
+    vols = matrix(0,N,N)
+
+    TTM = Money = Vol = rep(0,N*N)
+    
+    
+    class HestonPrice(strike, tau):
+          def HestonCallClosedForm(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike):
+                n = 1
+                for i in range(1, N):
+                    for j in range(1, N):
+                
+                        Ks[i] = exp(r * taus[j]+LogStrikes[i]) * S0
+                        price = HestonPrice(Ks[i],taus[j])
+                        iv = ImpliedVolCall(S0, Ks[i], taus[j], intr, price)
+                        TTM[n] = taus[j] * ONEYEAR # in days
+                        Money[n] = Moneyness(S0,Ks[i],taus[j],intr)
+                        Vol[n] = iv
+                        n = n+1
+    
 
