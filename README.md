@@ -1,5 +1,7 @@
-# Course project or Applied Stochastic Processes
+# Course project for Applied Stochastic Processes
 
-## Project topic: 
+## Project topic: Heston Model using FFT method
 
-## Team members:
+## Team members: 
+
+### Elena, Mahesh, Tim
