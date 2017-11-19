@@ -42,5 +42,48 @@ def ImpliedVolCall (S0, strike, tau, intr, price):
     if (f(-1) * f(1) > 0):
         return(NA)
     '''uniroot(f,c(-1,1))$root''' #Finding the uniroot function in Python
+    
+    def HestonCallClosedForm (lmbda, vbar, eta, rho, v0, intr, tau, S0, strike):
+    PIntegrand = function(u, lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, j) 
+    F = S0*exp(intr/tau)
+    x = log(F/strike)
+    a = lmbda * vbar
+            
+    if(j == 1):
+        b = lmbda - rho* eta
+        alpha =  (u^2)/2 - (u/2 * one_i) + (one_i * u)      #Changed 1i to one_i
+        beta = lmbda - (rho * eta) - (rho * eta * one_i * u)
+    else:
+        b = lmbda
+        alpha = (u^2)/2 - (u/2 * one_i)
+        beta = lmbda - (rho * eta * one_i * u)
+            
+            
+        gamma = a^2/2
+        d = sqrt(beta^2 - 4*alpha*gamma)
+        rplus = (beta + d)/(2*gamma)
+        rminus = (beta - d)/(2*gamma)
+        g = rminus / rplus
+            
+        D = rminus * (1 - exp(-d*tau))/(1-g*exp(-d*tau))
+        C = lmbda * (rminus * tau - 2/(eta^2) * log( (1-g*exp(-d*tau))/(1-g) ) )
+        
+        top = p(C*vbar + D*v0 + one_i*u*x)
+        bottom = (i * u)
+        Re(top/bottom)
+
+
+def P(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, j):
+    value = integrate(PIntegrand, lower = 0, upper = Inf,
+                      subdivisions=1000,
+                     )
+                       
+    ans =  0.5 + 1/pi * value
+    return (ans)
+    
+
+    A = S0*P(lmbda, vbar, eta, rho, v0, r, tau, S0, strike, 1)
+    B = strike*exp(-r*tau)*P(lmbda, vbar, eta, rho, v0, intr, tau, S0, strike, 0)
+    A-B
 
 
